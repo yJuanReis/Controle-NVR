@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { 
   AlertDialog, 
@@ -10,6 +9,7 @@ import {
   AlertDialogHeader, 
   AlertDialogTitle 
 } from '@/components/ui/alert-dialog';
+import { Cctv, Edit, HardDrive, Camera, FileText, Check, X } from 'lucide-react';
 
 interface ConfirmDialogProps {
   isOpen: boolean;

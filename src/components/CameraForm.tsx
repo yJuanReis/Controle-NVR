@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -15,11 +14,11 @@ interface CameraFormProps {
 
 const CameraForm: React.FC<CameraFormProps> = ({ isOpen, onClose, nvrId, currentCameras }) => {
   const { updateCameras } = useNVR();
-  const [cameras, setCameras] = useState(currentCameras);
+  const [cameras, setCameras] = useState(currentCameras || '');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    updateCameras(nvrId, cameras);
+    updateCameras(nvrId, typeof cameras === 'string' ? 0 : cameras);
     onClose();
   };
 
@@ -40,7 +39,7 @@ const CameraForm: React.FC<CameraFormProps> = ({ isOpen, onClose, nvrId, current
                 type="number"
                 min="0"
                 value={cameras}
-                onChange={(e) => setCameras(parseInt(e.target.value) || 0)}
+                onChange={(e) => setCameras(e.target.value === '' ? '' : parseInt(e.target.value))}
                 className="col-span-3"
                 required
               />

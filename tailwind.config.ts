@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -11,6 +10,18 @@ export default {
 	],
 	prefix: "",
 	theme: {
+		fontSize: {
+			'xs': '1rem',
+			'sm': '1.1rem',
+			'base': '1.2rem',
+			'lg': '1.35rem',
+			'xl': '1.5rem',
+			'2xl': '1.75rem',
+			'3xl': '2.15rem',
+			'4xl': '2.6rem',
+			'5xl': '3.45rem',
+			'6xl': '4.3rem',
+		},
 		container: {
 			center: true,
 			padding: '2rem',

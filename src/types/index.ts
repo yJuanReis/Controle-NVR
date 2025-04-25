@@ -1,11 +1,12 @@
-
 export interface NVR {
   id: string;
   name: string;
   model: string;
   owner: string;
+  marina: string;
   slots: Slot[];
   cameras: number;
+  notes?: string; // Campo de observações (opcional)
 }
 
 export interface Slot {

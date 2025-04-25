@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useNVR } from '@/context/NVRContext';
-import { Database, Edit, Camera, FileText, Trash, ArrowUp, ArrowDown, Search, Server, Cpu, HardDrive, Monitor, PlusCircle, BarChart2, TrendingUp } from 'lucide-react';
+import { Database, Edit, Camera, FileText, Trash, ArrowUp, ArrowDown, Search, Server, Cpu, HardDrive, Monitor, PlusCircle, BarChart2, TrendingUp, HelpCircle, X } from 'lucide-react';
 import NVRForm from '@/components/NVRForm';
 import SlotForm from '@/components/SlotForm';
 import CameraForm from '@/components/CameraForm';
@@ -11,9 +11,10 @@ import { getOwnerColor } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
 // Tipo para a ordenação
-type SortField = 'name' | 'model' | 'owner' | 'slots' | 'cameras' | null;
+type SortField = 'name' | 'model' | 'owner' | 'slots' | 'cameras' | 'marina' | null;
 type SortDirection = 'asc' | 'desc';
 
 const NVRList = () => {
@@ -161,12 +162,10 @@ const NVRList = () => {
     >
       <span>{label}</span>
       <span className="ml-1 w-3 h-3">
-        {sortField === field ? (
+        {sortField === field && (
           sortDirection === 'asc' ? 
             <ArrowUp className="w-3 h-3 text-blue-600" /> : 
             <ArrowDown className="w-3 h-3 text-blue-600" />
-        ) : (
-          <span className="text-gray-300">⋮</span>
         )}
       </span>
     </div>
@@ -182,7 +181,8 @@ const NVRList = () => {
       filteredNVRs = nvrs.filter(nvr => 
         nvr.name.toLowerCase().includes(searchTermLower) || 
         nvr.model.toLowerCase().includes(searchTermLower) || 
-        nvr.owner.toLowerCase().includes(searchTermLower)
+        nvr.owner.toLowerCase().includes(searchTermLower) ||
+        (nvr.marina && nvr.marina.toLowerCase().includes(searchTermLower))
       );
     }
     
@@ -199,6 +199,8 @@ const NVRList = () => {
           return a.model.localeCompare(b.model) * direction;
         case 'owner':
           return a.owner.localeCompare(b.owner) * direction;
+        case 'marina':
+          return (a.marina || '').localeCompare(b.marina || '') * direction;
         case 'slots':
           return (a.slots.filter(s => s.status === 'active').length - b.slots.filter(s => s.status === 'active').length) * direction;
         case 'cameras':
@@ -214,20 +216,71 @@ const NVRList = () => {
 
   const navigate = useNavigate();
 
+  const [helpDialogOpen, setHelpDialogOpen] = useState(false);
+
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Gerenciamento de NVRs</h1>
+        <h1 className="text-2xl font-bold">BR Marinas - Gestão de Segurança</h1>
         <Button onClick={() => setIsAddingNVR(true)} className="flex items-center">
           <PlusCircle className="mr-2 h-4 w-4" /> Adicionar NVR
         </Button>
       </div>
 
+      {/* Painel de explicação da aplicação */}
+      <div className="mb-6 bg-white from-blue-50 to-indigo-50 dark:from-blue-900/60 dark:to-indigo-900/60 rounded-lg shadow-md border-2 border-blue-300 dark:border-blue-700 overflow-hidden">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-0">
+          <div className="bg-blue-600 dark:bg-blue-800 text-white p-6 flex flex-col justify-center items-center md:items-start shadow-lg">
+            <h2 className="text-xl font-bold mb-2 text-center md:text-left">BR Marinas</h2>
+            <p className="text-sm text-blue-100 text-center md:text-left">Sistema de gestão e monitoramento de gravadores de vídeo em rede</p>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="mt-4 bg-white text-blue-600 border-blue-200 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 dark:text-white dark:border-white dark:hover:bg-blue-700 dark:hover:text-white"
+              onClick={() => setHelpDialogOpen(true)}
+            >
+              <HelpCircle className="w-4 h-4 mr-1" /> Como usar
+            </Button>
+          </div>
+          <div className="col-span-3 p-6 bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
+              <div className="flex items-start space-x-3 bg-blue-50 dark:bg-blue-800/20 p-4 rounded-lg border border-blue-200 dark:border-blue-700 shadow-sm">
+                <div className="bg-blue-100 dark:bg-blue-800 p-2 rounded-full text-blue-700 dark:text-blue-200 shadow-sm flex-shrink-0">
+                  <Server className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-blue-800 dark:text-gray-200 mb-1">Gerenciamento de Equipamentos</h3>
+                  <p className="text-gray-700 dark:text-gray-400">Cadastre e monitore todos os NVRs por marina, proprietário e modelo.</p>
+                </div>
+              </div>
+              <div className="flex items-start space-x-3 bg-green-50 dark:bg-green-800/20 p-4 rounded-lg border border-green-200 dark:border-green-700 shadow-sm">
+                <div className="bg-green-100 dark:bg-green-800 p-2 rounded-full text-green-700 dark:text-green-200 shadow-sm flex-shrink-0">
+                  <HardDrive className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-green-800 dark:text-gray-200 mb-1">Controle de Armazenamento</h3>
+                  <p className="text-gray-700 dark:text-gray-400">Gerencie slots e capacidade de armazenamento com visibilidade detalhada.</p>
+                </div>
+              </div>
+              <div className="flex items-start space-x-3 bg-amber-50 dark:bg-amber-800/20 p-4 rounded-lg border border-amber-200 dark:border-amber-700 shadow-sm">
+                <div className="bg-amber-100 dark:bg-amber-800 p-2 rounded-full text-amber-700 dark:text-amber-200 shadow-sm flex-shrink-0">
+                  <TrendingUp className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-amber-800 dark:text-gray-200 mb-1">Análise e Relatórios</h3>
+                  <p className="text-gray-700 dark:text-gray-400">Visualize estatísticas, identifique problemas e planeje expansões de capacidade.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Cartões de links para relatórios */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/relatorios')}>
+        <Card className="bg-gradient-to-br from-white to-blue-50 border-2 border-blue-200 hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/relatorios')}>
           <CardContent className="p-4 flex items-center">
-            <div className="bg-blue-500 text-white p-3 rounded-full mr-4">
+            <div className="bg-blue-500 text-white p-3 rounded-full mr-4 shadow-sm">
               <BarChart2 className="h-5 w-5" />
             </div>
             <div>
@@ -237,21 +290,9 @@ const NVRList = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200 hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/projecoes')}>
+        <Card className="bg-gradient-to-br from-white to-amber-50 border-2 border-amber-200 hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/evolucao-hds')}>
           <CardContent className="p-4 flex items-center">
-            <div className="bg-green-500 text-white p-3 rounded-full mr-4">
-              <TrendingUp className="h-5 w-5" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-green-800">Projeções</h3>
-              <p className="text-sm text-green-600">Análise de tendências futuras</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-amber-50 to-amber-100 border-amber-200 hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/evolucao-hds')}>
-          <CardContent className="p-4 flex items-center">
-            <div className="bg-amber-500 text-white p-3 rounded-full mr-4">
+            <div className="bg-amber-500 text-white p-3 rounded-full mr-4 shadow-sm">
               <HardDrive className="h-5 w-5" />
             </div>
             <div>
@@ -341,9 +382,10 @@ const NVRList = () => {
       {sortField && (
         <div className="mb-4 text-sm bg-blue-50 p-2 rounded border border-blue-200 text-blue-800">
           Ordenando por <strong>{
-            sortField === 'name' ? 'Nome' : 
+            sortField === 'name' ? 'Numeração' : 
             sortField === 'model' ? 'Modelo' : 
             sortField === 'owner' ? 'Proprietário' : 
+            sortField === 'marina' ? 'Marina' : 
             sortField === 'slots' ? 'Slots' : 
             'Câmeras'
           }</strong> em ordem {sortDirection === 'asc' ? 'crescente' : 'decrescente'}.
@@ -353,12 +395,15 @@ const NVRList = () => {
 
       {/* Tabela de NVRs */}
       <div className="bg-white rounded-lg shadow-md overflow-hidden mb-6">
-        <div className="grid grid-cols-7 gap-4 p-5 bg-gray-100 font-medium text-gray-600 border-b-2 border-gray-300">
+        <div className="grid grid-cols-8 gap-4 p-5 bg-gray-100 font-medium text-gray-600 border-b-2 border-gray-300">
           <div className="flex justify-center">
             <SortableHeader field="owner" label="Proprietário" className="inline-flex justify-center" />
           </div>
           <div className="flex items-center pl-8">
-            <SortableHeader field="name" label="Nome" className="inline-flex" />
+            <SortableHeader field="marina" label="Marina" className="inline-flex" />
+          </div>
+          <div className="flex justify-center">
+            <SortableHeader field="name" label="Numeração" className="inline-flex justify-center" />
           </div>
           <div className="flex justify-center">
             <SortableHeader field="model" label="Modelo" className="inline-flex justify-center" />
@@ -374,14 +419,14 @@ const NVRList = () => {
           </div>
         </div>
         
-        <div className="divide-y divide-gray-200">
+        <div className="divide-y divide-gray-200 grid-alternado">
           {sortedNVRs.length === 0 ? (
             <div className="p-8 text-center text-gray-500">
               {searchTerm ? (
                 <div>
                   <p className="text-lg font-medium">Sem resultados!</p>
                   <p className="text-sm">Não foram encontrados valores correspondentes à pesquisa "{searchTerm}"</p>
-                  <p className="text-sm mt-2">Tente pesquisar por um nome, modelo ou proprietário diferente.</p>
+                  <p className="text-sm mt-2">Tente pesquisar por um nome, modelo, proprietário ou marina diferente.</p>
                   <Button 
                     variant="outline" 
                     size="lg" 
@@ -410,11 +455,10 @@ const NVRList = () => {
                 <div 
                   key={nvr.id} 
                   id={`nvr-${nvr.id}`}
-                  className={`grid grid-cols-7 gap-6 py-7 px-4 items-center text-sm 
+                  className={`grid grid-cols-8 gap-6 py-7 px-4 items-center text-sm 
                     ${isHighlighted 
-                      ? 'bg-yellow-100 border-2 border-yellow-500 shadow-lg -mx-1 my-1 animate-pulse' 
-                      : index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} 
-                    ${isHighlighted ? '' : 'hover:bg-blue-50'} 
+                      ? 'destacado border-2 border-yellow-500 shadow-lg -mx-1 my-1 animate-pulse' 
+                      : ''} 
                     transition-colors duration-150 relative`}
                 >
                   {isHighlighted && (
@@ -432,11 +476,13 @@ const NVRList = () => {
                     </div>
                   </div>
                   <div className="flex flex-col space-y-2 justify-center">
+                    <div className="font-medium">{nvr.marina}</div>
+                  </div>
+                  <div className="flex justify-center">
                     <div className="font-medium">{nvr.name}</div>
-                    <div className="flex items-center text-gray-500 text-sm">
-                      <Server className="w-3 h-3 mr-1" />
-                      {nvr.model}
-                    </div>
+                  </div>
+                  <div className="flex justify-center">
+                    <div className="font-medium">{nvr.model}</div>
                   </div>
                   <div className="flex justify-center col-span-2">
                     <div>
@@ -559,6 +605,72 @@ const NVRList = () => {
           cancelText="Cancelar"
         />
       )}
+
+      {/* Diálogo de Ajuda */}
+      <Dialog open={helpDialogOpen} onOpenChange={setHelpDialogOpen}>
+        <DialogContent className="max-w-3xl bg-white dark:bg-gray-800 border-2 border-blue-200 dark:border-blue-700">
+          <DialogHeader>
+            <DialogTitle className="text-lg flex items-center text-gray-900 dark:text-white">
+              <HelpCircle className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
+              Como usar o BR Marinas
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="mt-2">
+            <div>
+              <h3 className="text-md font-semibold text-blue-700 dark:text-blue-400 pb-1">Gerenciamento de NVRs</h3>
+              
+              <div className="grid grid-cols-2 gap-3 mb-3">
+                <div className="bg-blue-50 dark:bg-gray-700 p-2 rounded border border-blue-200 dark:border-gray-600">
+                  <h4 className="font-medium text-blue-900 dark:text-gray-200 text-sm">1. Adicionar um Novo NVR</h4>
+                  <p className="text-xs text-gray-700 dark:text-gray-300">Clique no botão "Adicionar NVR" no topo da página.</p>
+                </div>
+                
+                <div className="bg-green-50 dark:bg-gray-700 p-2 rounded border border-green-200 dark:border-gray-600">
+                  <h4 className="font-medium text-green-900 dark:text-gray-200 text-sm">2. Gerenciar Slots de HD</h4>
+                  <p className="text-xs text-gray-700 dark:text-gray-300">Clique em um dos círculos para configurar um dos Slots.</p>
+                </div>
+                
+                <div className="bg-amber-50 dark:bg-gray-700 p-2 rounded border border-amber-200 dark:border-gray-600">
+                  <h4 className="font-medium text-amber-900 dark:text-gray-200 text-sm">3. Atualizar Câmeras</h4>
+                  <p className="text-xs text-gray-700 dark:text-gray-300">Clique no ícone de câmera para ajustar a quantidade.</p>
+                </div>
+                
+                <div className="bg-indigo-50 dark:bg-gray-700 p-2 rounded border border-indigo-200 dark:border-gray-600">
+                  <h4 className="font-medium text-indigo-900 dark:text-gray-200 text-sm">4. Pesquisar e Filtrar</h4>
+                  <p className="text-xs text-gray-700 dark:text-gray-300">Use a barra de pesquisa ou filtros de coluna.</p>
+                </div>
+              </div>
+            </div>
+            
+            <div>
+              <h3 className="text-md font-semibold text-green-700 dark:text-green-400 pb-1">Relatórios e Análises</h3>
+              
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-blue-50 dark:bg-gray-700 p-2 rounded border border-blue-200 dark:border-gray-600">
+                  <h4 className="font-medium text-blue-900 dark:text-gray-200 text-sm">1. Relatórios Gerais</h4>
+                  <p className="text-xs text-gray-700 dark:text-gray-300 mb-1">Na seção Relatórios você pode ver:</p>
+                  <ul className="text-xs text-gray-700 dark:text-gray-300 list-disc pl-4 space-y-0">
+                    <li>Câmeras por proprietário</li>
+                    <li>Slots sem HD ou HD menor que 12/14TB</li>
+                    <li>NVRs em estado crítico</li>
+                  </ul>
+                </div>
+                
+                <div className="bg-green-50 dark:bg-gray-700 p-2 rounded border border-green-200 dark:border-gray-600">
+                  <h4 className="font-medium text-green-900 dark:text-gray-200 text-sm">2. Exportar Dados</h4>
+                  <p className="text-xs text-gray-700 dark:text-gray-300 mb-1">Formatos disponíveis:</p>
+                  <ul className="text-xs text-gray-700 dark:text-gray-300 list-disc pl-4 space-y-0">
+                    <li>Texto (.txt)</li>
+                    <li>Planilha (.csv)</li>
+                    <li>JSON (.json)</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

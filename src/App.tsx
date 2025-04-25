@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,6 +8,7 @@ import { NVRProvider } from "./context/NVRContext";
 import NVRList from "./pages/NVRList";
 import Reports from "./pages/Reports";
 import HDEvolution from "./pages/HDEvolution";
+import ReportAnalyzer from "./pages/ReportAnalyzer";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -25,6 +25,7 @@ const App = () => (
               <Route path="/" element={<NVRList />} />
               <Route path="/relatorios" element={<Reports />} />
               <Route path="/evolucao-hds" element={<HDEvolution />} />
+              <Route path="/analisador-relatorios" element={<ReportAnalyzer />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Layout>

@@ -1,7 +1,23 @@
-
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Database, BarChart2, HardDrive } from 'lucide-react';
+import { 
+  Database, 
+  BarChart2, 
+  HardDrive, 
+  TrendingUp, 
+  ChevronLeft, 
+  ChevronRight, 
+  AlertCircle, 
+  Sun,
+  Moon,
+  Search,
+  Home,
+  Server,
+  Settings
+} from 'lucide-react';
+import { useNVR } from '@/context/NVRContext';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -9,59 +25,227 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
+  const { nvrs, getTotalStats, getSlotStats } = useNVR();
+  const [collapsed, setCollapsed] = useState<boolean>(false);
+  const [darkMode, setDarkMode] = useState<boolean>(false);
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  
+  // Estatísticas rápidas
+  const stats = getTotalStats();
+  const slotStats = getSlotStats();
+  
+  // NVRs em estado crítico
+  const criticalNVRs = nvrs.filter(nvr => {
+    const hasActiveHDs = nvr.slots.some(slot => slot.status === 'active');
+    const smallHDs = nvr.slots.filter(slot => 
+      slot.status === 'active' && 
+      slot.hdSize !== undefined && 
+      slot.hdSize < 12
+    ).length;
+    
+    const isExceptionModel = nvr.model === "MHDX 3116";
+    
+    if (isExceptionModel) {
+      return !hasActiveHDs;
+    } else {
+      return smallHDs > 0 || !hasActiveHDs;
+    }
+  });
   
   const isActive = (path: string) => {
     return location.pathname === path;
   };
+  
+  // Aplicar tema escuro
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [darkMode]);
+  
+  // Carregar preferência do usuário
+  useEffect(() => {
+    const savedCollapsed = localStorage.getItem('sidebarCollapsed');
+    const savedTheme = localStorage.getItem('theme');
+    
+    if (savedCollapsed) {
+      setCollapsed(savedCollapsed === 'true');
+    }
+    
+    if (savedTheme) {
+      setDarkMode(savedTheme === 'dark');
+    } else {
+      // Verificar preferência do sistema
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      setDarkMode(prefersDark);
+    }
+  }, []);
+  
+  // Salvar preferências
+  const toggleCollapse = () => {
+    const newState = !collapsed;
+    setCollapsed(newState);
+    localStorage.setItem('sidebarCollapsed', newState.toString());
+  };
+  
+  const toggleTheme = () => {
+    const newState = !darkMode;
+    setDarkMode(newState);
+    localStorage.setItem('theme', newState ? 'dark' : 'light');
+  };
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      {/* Barra lateral */}
-      <aside className="w-64 bg-white border-r border-gray-200 shadow-sm">
-        <div className="p-6 border-b border-gray-200">
-          <h1 className="text-xl font-bold text-gray-800">Sistema NVR</h1>
+    <div className={`flex h-screen ${darkMode ? 'dark' : ''}`}>
+      {/* Barra lateral moderna */}
+      <aside 
+        className={`
+          transition-all duration-300 ease-in-out
+          ${collapsed ? 'w-20' : 'w-72'} 
+          bg-sidebar border-r border-sidebar-border
+          flex flex-col shadow-md relative
+        `}
+      >
+        {/* Botão de recolher */}
+        <button 
+          onClick={toggleCollapse}
+          className={`
+            absolute top-1/2 -right-3 z-10
+            flex items-center justify-center
+            w-6 h-16 rounded-r-md
+            bg-sidebar-primary text-sidebar-primary-foreground
+            shadow-md hover:bg-sidebar-primary/80
+            transition-all duration-300
+          `}
+          title={collapsed ? "Expandir menu" : "Recolher menu"}
+        >
+          {collapsed ? 
+            <ChevronRight className="w-4 h-4" /> : 
+            <ChevronLeft className="w-4 h-4" />
+          }
+        </button>
+        
+        {/* Cabeçalho da sidebar */}
+        <div className="p-4 border-b border-sidebar-border flex items-center">
+          <div className="flex items-center">
+            <div className="flex justify-center items-center bg-sidebar-primary text-sidebar-primary-foreground p-2 rounded-md mr-3">
+              <Server className="w-6 h-6" />
+            </div>
+            {!collapsed && (
+              <h1 className="text-xl font-bold text-sidebar-foreground">Controle NVR</h1>
+            )}
+          </div>
         </div>
-        <nav className="py-4">
-          <ul className="space-y-1">
+        
+        {/* Pesquisa */}
+        {!collapsed && (
+          <div className="p-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-2.5 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9 py-2 bg-sidebar-accent border-sidebar-border focus:ring-sidebar-primary focus:border-sidebar-primary text-sidebar-foreground"
+              />
+            </div>
+          </div>
+        )}
+        
+        {/* Menu de navegação */}
+        <nav className="flex-1 overflow-y-auto py-4 px-3">
+          <span className={`px-3 text-xs font-semibold text-muted-foreground uppercase mb-2 ${collapsed ? 'hidden' : 'block'}`}>
+            Principal
+          </span>
+          <ul className="space-y-2">
             <li>
               <Link
                 to="/"
-                className={`flex items-center px-6 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 ${
-                  isActive('/') ? 'bg-blue-50 text-blue-600 border-r-4 border-blue-500' : ''
-                }`}
+                className={`
+                  flex items-center ${collapsed ? 'justify-center' : 'justify-between'} 
+                  px-4 py-3 rounded-md
+                  ${isActive('/') 
+                    ? 'border-l-4 border-primary text-primary font-medium' 
+                    : 'text-sidebar-foreground hover:bg-sidebar-accent/10 hover:text-sidebar-primary'}
+                `}
               >
-                <Database className="w-5 h-5 mr-3" />
-                <span>NVRs</span>
+                <div className="flex items-center">
+                  <Home className={`${collapsed ? 'w-6 h-6' : 'w-5 h-5 mr-3'} ${collapsed && isActive('/') ? 'text-primary' : ''}`} />
+                  {!collapsed && <span>NVRs</span>}
+                </div>
+                {!collapsed && (
+                  <Badge variant="outline" className="bg-sidebar-accent text-sidebar-foreground dark:bg-transparent dark:text-white">
+                    {nvrs.length}
+                  </Badge>
+                )}
               </Link>
             </li>
             <li>
               <Link
                 to="/relatorios"
-                className={`flex items-center px-6 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 ${
-                  isActive('/relatorios') ? 'bg-blue-50 text-blue-600 border-r-4 border-blue-500' : ''
-                }`}
+                className={`
+                  flex items-center ${collapsed ? 'justify-center' : 'justify-between'} 
+                  px-4 py-3 rounded-md
+                  ${isActive('/relatorios') 
+                    ? 'border-l-4 border-primary text-primary font-medium' 
+                    : 'text-sidebar-foreground hover:bg-sidebar-accent/10 hover:text-sidebar-primary'}
+                `}
               >
-                <BarChart2 className="w-5 h-5 mr-3" />
-                <span>Relatórios</span>
+                <div className="flex items-center">
+                  <BarChart2 className={`${collapsed ? 'w-6 h-6' : 'w-5 h-5 mr-3'} ${collapsed && isActive('/relatorios') ? 'text-primary' : ''}`} />
+                  {!collapsed && <span>Relatórios</span>}
+                </div>
               </Link>
             </li>
             <li>
               <Link
                 to="/evolucao-hds"
-                className={`flex items-center px-6 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 ${
-                  isActive('/evolucao-hds') ? 'bg-blue-50 text-blue-600 border-r-4 border-blue-500' : ''
-                }`}
+                className={`
+                  flex items-center ${collapsed ? 'justify-center' : 'justify-between'} 
+                  px-4 py-3 rounded-md
+                  ${isActive('/evolucao-hds') 
+                    ? 'border-l-4 border-primary text-primary font-medium' 
+                    : 'text-sidebar-foreground hover:bg-sidebar-accent/10 hover:text-sidebar-primary'}
+                `}
               >
-                <HardDrive className="w-5 h-5 mr-3" />
-                <span>Evolução HDs</span>
+                <div className="flex items-center">
+                  <HardDrive className={`${collapsed ? 'w-6 h-6' : 'w-5 h-5 mr-3'} ${collapsed && isActive('/evolucao-hds') ? 'text-primary' : ''}`} />
+                  {!collapsed && <span>Evolução HDs</span>}
+                </div>
+                {!collapsed && criticalNVRs.length > 0 && (
+                  <Badge className="bg-destructive/20 text-destructive font-bold dark:bg-transparent dark:border dark:border-destructive dark:text-white">
+                    {criticalNVRs.length}
+                  </Badge>
+                )}
               </Link>
             </li>
           </ul>
         </nav>
+        
+        {/* Botão de alternância de tema */}
+        <div className="p-4 border-t border-sidebar-border">
+          <button 
+            onClick={toggleTheme}
+            className="flex items-center justify-center w-full p-2 rounded-md hover:bg-sidebar-accent text-sidebar-foreground"
+            title={darkMode ? "Mudar para tema claro" : "Mudar para tema escuro"}
+          >
+            {darkMode ? (
+              <div className="flex items-center">
+                <Sun className="w-5 h-5 mr-2" />
+                {!collapsed && <span>Tema Claro</span>}
+              </div>
+            ) : (
+              <div className="flex items-center">
+                <Moon className="w-5 h-5 mr-2" />
+                {!collapsed && <span>Tema Escuro</span>}
+              </div>
+            )}
+          </button>
+        </div>
       </aside>
       
-      {/* Conteúdo principal */}
-      <main className="flex-1 overflow-y-auto bg-gray-50">
+      <main className="flex-1 overflow-y-auto">
         {children}
       </main>
     </div>
