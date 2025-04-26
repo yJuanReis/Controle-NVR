@@ -339,3 +339,151 @@ thead, th {
   color: rgba(220, 225, 235, 1) !important;
   border-bottom: 2px solid rgba(70, 85, 120, 0.8) !important;
 }
+
+/* Regras responsivas globais */
+@layer utilities {
+  .mobile-friendly {
+    @apply p-4 md:p-6;
+  }
+
+  .table-responsive {
+    @apply w-full overflow-x-auto;
+  }
+
+  .input-responsive {
+    @apply w-full md:w-auto;
+  }
+
+  .grid-responsive {
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4;
+  }
+
+  .text-responsive {
+    @apply text-sm md:text-base;
+  }
+
+  .heading-responsive {
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+
+  @media (min-width: 768px) {
+    .heading-responsive {
+      font-size: 1.75rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .heading-responsive {
+      font-size: 2.15rem;
+    }
+  }
+
+  .button-responsive {
+    @apply w-full md:w-auto;
+  }
+
+  .card-responsive {
+    @apply rounded-lg shadow-md p-4 md:p-6;
+  }
+}
+
+/* Ajustes para dispositivos móveis */
+@media (max-width: 768px) {
+  .table-wrapper {
+    @apply -mx-4;
+  }
+
+  .table-responsive {
+    @apply text-sm;
+  }
+
+  .table-responsive th,
+  .table-responsive td {
+    @apply px-2 py-1;
+  }
+
+  .form-group {
+    @apply flex flex-col space-y-2;
+  }
+
+  .form-row {
+    @apply flex flex-col md:flex-row md:space-x-4;
+  }
+
+  /* Ajustes adicionais para mobile */
+  .mobile-friendly {
+    @apply p-4;
+  }
+
+  .card-responsive {
+    @apply p-3;
+  }
+
+  .button-responsive {
+    @apply w-full;
+  }
+
+  .grid-responsive {
+    @apply grid-cols-1 gap-3;
+  }
+
+  .text-responsive {
+    @apply text-sm;
+  }
+
+  /* Ajustes para tooltips em mobile */
+  .tooltip-text {
+    @apply hidden;
+  }
+
+  /* Ajustes para tabelas em mobile */
+  .table-responsive {
+    @apply block w-full overflow-x-auto;
+  }
+
+  .table-responsive thead {
+    @apply hidden;
+  }
+
+  .table-responsive tbody {
+    @apply block w-full;
+  }
+
+  .table-responsive tr {
+    @apply block w-full mb-4 border rounded-lg;
+  }
+
+  .table-responsive td {
+    @apply block w-full text-right px-4 py-2 border-b last:border-b-0;
+  }
+
+  .table-responsive td::before {
+    content: attr(data-label);
+    float: left;
+    font-weight: 700;
+  }
+}
+
+/* Ajustes específicos para telas muito pequenas */
+@media (max-width: 480px) {
+  .mobile-friendly {
+    @apply p-2;
+  }
+
+  .card-responsive {
+    @apply p-2;
+  }
+
+  .text-responsive {
+    @apply text-xs;
+  }
+
+  .heading-responsive {
+    font-size: 1.25rem;
+  }
+
+  .table-responsive td {
+    @apply px-2 py-1;
+  }
+}

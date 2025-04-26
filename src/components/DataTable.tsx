@@ -19,26 +19,26 @@ export default function DataTable({ data }: DataTableProps) {
   return (
     <div className="space-y-6">
       {/* Metadados */}
-      <Card>
+      <Card className="card-responsive">
         <CardHeader>
-          <CardTitle>Informações Gerais</CardTitle>
+          <CardTitle className="heading-responsive">Informações Gerais</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <p className="text-sm font-medium text-muted-foreground">Título</p>
-              <p>{data.title}</p>
+              <p className="text-responsive">{data.title}</p>
             </div>
             {data.metadata?.date && (
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Data</p>
-                <p>{data.metadata.date}</p>
+                <p className="text-responsive">{data.metadata.date}</p>
               </div>
             )}
             {data.metadata?.period && (
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Período</p>
-                <p>{data.metadata.period}</p>
+                <p className="text-responsive">{data.metadata.period}</p>
               </div>
             )}
           </div>
@@ -47,31 +47,35 @@ export default function DataTable({ data }: DataTableProps) {
 
       {/* Seções */}
       {data.sections && data.sections.length > 0 && (
-        <Card>
+        <Card className="card-responsive">
           <CardHeader>
-            <CardTitle>Seções do Relatório</CardTitle>
+            <CardTitle className="heading-responsive">Seções do Relatório</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
               {data.sections.map((section, index) => (
-                <div key={index} className="border rounded-lg p-4">
-                  <h3 className="font-medium text-lg mb-2">{section.name}</h3>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-[200px]">Propriedade</TableHead>
-                        <TableHead>Valor</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {Object.entries(section.content).map(([key, value], idx) => (
-                        <TableRow key={idx}>
-                          <TableCell className="font-medium">{key}</TableCell>
-                          <TableCell>{String(value)}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                <div key={index} className="border rounded-lg p-4 mobile-friendly">
+                  <h3 className="font-medium text-lg mb-2 text-responsive">{section.name}</h3>
+                  <div className="table-wrapper">
+                    <div className="table-responsive">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="w-[200px] md:w-[250px]">Propriedade</TableHead>
+                            <TableHead>Valor</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {Object.entries(section.content).map(([key, value], idx) => (
+                            <TableRow key={idx}>
+                              <TableCell className="font-medium text-responsive">{key}</TableCell>
+                              <TableCell className="text-responsive">{String(value)}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
@@ -81,34 +85,36 @@ export default function DataTable({ data }: DataTableProps) {
 
       {/* Tabelas */}
       {data.tables && data.tables.length > 0 && (
-        <Card>
+        <Card className="card-responsive">
           <CardHeader>
-            <CardTitle>Tabelas</CardTitle>
+            <CardTitle className="heading-responsive">Tabelas</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
               {data.tables.map((table, index) => (
-                <div key={index} className="border rounded-lg p-4">
-                  <h3 className="font-medium text-lg mb-2">Tabela {index + 1}</h3>
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          {table.headers.map((header, idx) => (
-                            <TableHead key={idx}>{header}</TableHead>
-                          ))}
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {table.rows.map((row, rowIdx) => (
-                          <TableRow key={rowIdx}>
-                            {row.map((cell, cellIdx) => (
-                              <TableCell key={cellIdx}>{String(cell)}</TableCell>
+                <div key={index} className="border rounded-lg p-4 mobile-friendly">
+                  <h3 className="font-medium text-lg mb-2 text-responsive">Tabela {index + 1}</h3>
+                  <div className="table-wrapper">
+                    <div className="table-responsive">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            {table.headers.map((header, idx) => (
+                              <TableHead key={idx} className="text-responsive">{header}</TableHead>
                             ))}
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                        </TableHeader>
+                        <TableBody>
+                          {table.rows.map((row, rowIdx) => (
+                            <TableRow key={rowIdx}>
+                              {row.map((cell, cellIdx) => (
+                                <TableCell key={cellIdx} className="text-responsive">{String(cell)}</TableCell>
+                              ))}
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
                   </div>
                 </div>
               ))}

@@ -150,14 +150,14 @@ const NVRForm: React.FC<NVRFormProps> = ({ isOpen, onClose, editingNVR }) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px] text-base">
+      <DialogContent className="sm:max-w-[500px] text-base w-[95%] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-2xl">{editingNVR ? 'Editar NVR' : 'Novo NVR'}</DialogTitle>
+          <DialogTitle className="text-xl md:text-2xl">{editingNVR ? 'Editar NVR' : 'Novo NVR'}</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="marina" className="text-right text-base">
+            <div className="grid grid-cols-1 md:grid-cols-4 items-start md:items-center gap-2 md:gap-4">
+              <Label htmlFor="marina" className="md:text-right text-sm md:text-base">
                 Marina <span className="text-red-500">*</span>
               </Label>
               <Select
@@ -167,7 +167,7 @@ const NVRForm: React.FC<NVRFormProps> = ({ isOpen, onClose, editingNVR }) => {
               >
                 <SelectTrigger 
                   id="marina" 
-                  className="col-span-3"
+                  className="col-span-1 md:col-span-3"
                 >
                   <SelectValue placeholder="Selecione a marina" />
                 </SelectTrigger>
@@ -176,6 +176,7 @@ const NVRForm: React.FC<NVRFormProps> = ({ isOpen, onClose, editingNVR }) => {
                     <SelectItem 
                       key={marina} 
                       value={marina}
+                      className="text-sm md:text-base"
                     >
                       {marina}
                     </SelectItem>
@@ -183,8 +184,8 @@ const NVRForm: React.FC<NVRFormProps> = ({ isOpen, onClose, editingNVR }) => {
                 </SelectContent>
               </Select>
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="name" className="text-right text-base">
+            <div className="grid grid-cols-1 md:grid-cols-4 items-start md:items-center gap-2 md:gap-4">
+              <Label htmlFor="name" className="md:text-right text-sm md:text-base">
                 Numeração <span className="text-red-500">*</span>
               </Label>
               <Input
@@ -192,13 +193,13 @@ const NVRForm: React.FC<NVRFormProps> = ({ isOpen, onClose, editingNVR }) => {
                 name="name"
                 value={formData.name}
                 onChange={handleInputChange}
-                className="col-span-3"
+                className="col-span-1 md:col-span-3 text-sm md:text-base"
                 placeholder="Ex: 01, 02, etc."
                 required
               />
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="model" className="text-right text-base">
+            <div className="grid grid-cols-1 md:grid-cols-4 items-start md:items-center gap-2 md:gap-4">
+              <Label htmlFor="model" className="md:text-right text-sm md:text-base">
                 Modelo <span className="text-red-500">*</span>
               </Label>
               <Select
@@ -206,15 +207,15 @@ const NVRForm: React.FC<NVRFormProps> = ({ isOpen, onClose, editingNVR }) => {
                 onValueChange={handleModelChange}
                 required
               >
-                <SelectTrigger id="model" className="col-span-3">
+                <SelectTrigger id="model" className="col-span-1 md:col-span-3">
                   <SelectValue placeholder="Selecione o modelo" />
                 </SelectTrigger>
                 <SelectContent>
                   {Object.keys(NVR_MODELS).map((modelKey) => {
                      const model = NVR_MODELS[modelKey];
-                     if (!model) return null; // Verificação caso haja chave inválida
+                     if (!model) return null;
                      return (
-                       <SelectItem key={modelKey} value={modelKey}>
+                       <SelectItem key={modelKey} value={modelKey} className="text-sm md:text-base">
                          <div className="flex items-center">
                            <span>{modelKey}</span>
                            <span className="ml-2 px-2 py-0.5 bg-blue-100 text-blue-800 rounded-md text-xs">
@@ -227,8 +228,8 @@ const NVRForm: React.FC<NVRFormProps> = ({ isOpen, onClose, editingNVR }) => {
                 </SelectContent>
               </Select>
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="owner" className="text-right text-base">
+            <div className="grid grid-cols-1 md:grid-cols-4 items-start md:items-center gap-2 md:gap-4">
+              <Label htmlFor="owner" className="md:text-right text-sm md:text-base">
                 Proprietário <span className="text-red-500">*</span>
               </Label>
               <Select
@@ -238,7 +239,7 @@ const NVRForm: React.FC<NVRFormProps> = ({ isOpen, onClose, editingNVR }) => {
               >
                 <SelectTrigger 
                   id="owner" 
-                  className="col-span-3"
+                  className="col-span-1 md:col-span-3"
                   style={{ 
                     color: getOwnerColor(formData.owner),
                     fontWeight: 'bold',
@@ -252,11 +253,9 @@ const NVRForm: React.FC<NVRFormProps> = ({ isOpen, onClose, editingNVR }) => {
                   {OWNER_OPTIONS.map((owner) => (
                     <SelectItem 
                       key={owner} 
-                      value={owner} 
-                      style={{ 
-                        color: getOwnerColor(owner), 
-                        fontWeight: 'bold' 
-                      }}
+                      value={owner}
+                      className="text-sm md:text-base"
+                      style={{ color: getOwnerColor(owner), fontWeight: 'bold' }}
                     >
                       {owner}
                     </SelectItem>
@@ -264,25 +263,24 @@ const NVRForm: React.FC<NVRFormProps> = ({ isOpen, onClose, editingNVR }) => {
                 </SelectContent>
               </Select>
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="cameras" className="text-right text-base">
-                Câmeras <span className="text-red-500">*</span>
+            <div className="grid grid-cols-1 md:grid-cols-4 items-start md:items-center gap-2 md:gap-4">
+              <Label htmlFor="cameras" className="md:text-right text-sm md:text-base">
+                Câmeras
               </Label>
               <Input
                 id="cameras"
                 name="cameras"
+                type="number"
                 value={formData.cameras}
                 onChange={handleInputChange}
-                className="col-span-3"
-                type="number"
+                className="col-span-1 md:col-span-3 text-sm md:text-base"
+                placeholder="Número de câmeras"
                 min="0"
-                max={selectedModelConfig?.maxCameras || 999}
-                placeholder={selectedModelConfig ? `Máximo: ${selectedModelConfig.maxCameras}` : "Número de câmeras"}
-                required
+                max={selectedModelConfig?.maxCameras}
               />
             </div>
-            <div className="grid grid-cols-4 items-start gap-4">
-              <Label htmlFor="notes" className="text-right pt-2 text-base">
+            <div className="grid grid-cols-1 md:grid-cols-4 items-start md:items-center gap-2 md:gap-4">
+              <Label htmlFor="notes" className="md:text-right text-sm md:text-base">
                 Observações
               </Label>
               <Textarea
@@ -290,16 +288,26 @@ const NVRForm: React.FC<NVRFormProps> = ({ isOpen, onClose, editingNVR }) => {
                 name="notes"
                 value={formData.notes}
                 onChange={handleInputChange}
-                className="col-span-3 min-h-[100px]"
-                placeholder="Informações adicionais sobre este NVR..."
+                className="col-span-1 md:col-span-3 min-h-[100px] text-sm md:text-base"
+                placeholder="Observações adicionais..."
               />
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" type="button" onClick={onClose}>
+          <DialogFooter className="flex flex-col sm:flex-row gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              className="w-full sm:w-auto text-sm md:text-base"
+            >
               Cancelar
             </Button>
-            <Button type="submit">{editingNVR ? 'Atualizar' : 'Adicionar'}</Button>
+            <Button
+              type="submit"
+              className="w-full sm:w-auto text-sm md:text-base"
+            >
+              {editingNVR ? 'Salvar Alterações' : 'Adicionar NVR'}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

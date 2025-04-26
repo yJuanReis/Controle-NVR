@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Download, FileText, FileJson, FileSpreadsheet } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
+import { db } from '../lib/firebase';
+import { doc, setDoc, getDoc, collection, serverTimestamp, onSnapshot } from 'firebase/firestore';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,51 +21,136 @@ const HDEvolution = () => {
   const { nvrs, getUpgradeStatus, getSlotStats } = useNVR();
   
   // Preços por capacidade de HD
-  const [hd12TBPrice, setHd12TBPrice] = useState(2800); // valor médio assumido por HD de 12TB
-  const [hd14TBPrice, setHd14TBPrice] = useState(3500); // valor médio assumido por HD de 14TB
+  const [hd12TBPrice, setHd12TBPrice] = useState(2800);
+  const [hd14TBPrice, setHd14TBPrice] = useState(3500);
   const [purchasedSlots, setPurchasedSlots] = useState<Record<string, boolean[]>>({});
+  const [isLoading, setIsLoading] = useState(true);
 
   // Array de modelos que suportam apenas até 12TB
   const modelos12TB = ["MHDX 3116", "NVD 1232"];
 
-  // Carregar o estado de slots comprados do localStorage quando o componente montar
-  useEffect(() => {
-    // Tentar recuperar dados salvos do localStorage
-    const savedPurchasedSlots = localStorage.getItem('purchasedHDSlots');
-    
-    if (savedPurchasedSlots) {
-      try {
-        const parsed = JSON.parse(savedPurchasedSlots);
-        setPurchasedSlots(parsed);
-        console.log('Dados de slots comprados carregados do localStorage:', parsed);
-      } catch (error) {
-        console.error('Erro ao carregar dados de slots comprados:', error);
-        // Se houver erro no parsing, inicializar com o estado padrão
-        initializeDefaultPurchasedState();
-      }
-    } else {
-      // Se não existir dados no localStorage, inicializar com o estado padrão
-      initializeDefaultPurchasedState();
+  // Função para salvar os preços no Firebase
+  const savePrices = async (price12TB: number, price14TB: number) => {
+    try {
+      const pricesRef = doc(db, 'hdSlots', 'prices');
+      await setDoc(pricesRef, {
+        hd12TBPrice: price12TB,
+        hd14TBPrice: price14TB,
+        lastUpdated: serverTimestamp()
+      });
+    } catch (error) {
+      console.error('Erro ao salvar preços:', error);
+      toast({
+        title: "Erro ao salvar preços",
+        description: "Não foi possível atualizar os preços dos HDs.",
+        variant: "destructive"
+      });
     }
+  };
+
+  // Efeito para carregar os preços do Firebase
+  useEffect(() => {
+    const loadPrices = async () => {
+      try {
+        const pricesRef = doc(db, 'hdSlots', 'prices');
+        const pricesSnap = await getDoc(pricesRef);
+        
+        if (pricesSnap.exists()) {
+          const data = pricesSnap.data();
+          setHd12TBPrice(data.hd12TBPrice);
+          setHd14TBPrice(data.hd14TBPrice);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar preços:', error);
+      }
+    };
+
+    loadPrices();
   }, []);
 
+  // Efeito para monitorar slots comprados
+  useEffect(() => {
+    console.log('Iniciando monitoramento dos slots comprados...');
+    const docRef = doc(db, 'hdSlots', 'purchasedSlots');
+
+    const unsubscribe = onSnapshot(docRef, 
+      (snapshot) => {
+        if (snapshot.exists()) {
+          const data = snapshot.data();
+          console.log('Dados atualizados do Firebase:', data);
+
+          if (data.slots && Object.keys(data.slots).length > 0) {
+            setPurchasedSlots(data.slots);
+            console.log('Slots atualizados com sucesso');
+          } else {
+            console.log('Dados existem mas estão vazios, inicializando estado padrão...');
+            initializeDefaultPurchasedState();
+          }
+        } else {
+          console.log('Nenhum documento encontrado, inicializando estado padrão...');
+          initializeDefaultPurchasedState();
+        }
+        setIsLoading(false);
+      },
+      (error) => {
+        console.error('Erro ao monitorar slots:', error);
+        toast({
+          title: "Erro ao monitorar dados",
+          description: "Houve um problema ao monitorar as atualizações dos slots.",
+          variant: "destructive"
+        });
+        setIsLoading(false);
+      }
+    );
+
+    return () => {
+      console.log('Removendo listener de slots...');
+      unsubscribe();
+    };
+  }, [nvrs]); // Adicionado nvrs como dependência
+
   // Função para inicializar o estado padrão dos slots comprados
-  const initializeDefaultPurchasedState = () => {
-    const initialPurchasedState: Record<string, boolean[]> = {};
-    
-    nvrs.forEach(nvr => {
-      // Verificar se o NVR é de um modelo que não suporta HD maior que 12TB
-      const isExceptionModel = modelos12TB.includes(nvr.model);
-      // Tamanho máximo suportado pelo modelo
-      const maxHDSize = isExceptionModel ? 12 : 14;
+  const initializeDefaultPurchasedState = async () => {
+    try {
+      const initialState = {};
       
-      // Inicializar com slots que já têm HDs de tamanho adequado marcados como comprados
-      initialPurchasedState[nvr.id] = nvr.slots.map(slot => 
-        slot.status !== "empty" && slot.hdSize && slot.hdSize >= maxHDSize
-      );
-    });
-    
-    setPurchasedSlots(initialPurchasedState);
+      // Inicializa o estado para cada NVR existente
+      nvrs.forEach(nvr => {
+        initialState[nvr.id] = Array(16).fill(false);
+      });
+
+      // Salva o estado inicial no Firebase com mais informações
+      await setDoc(doc(db, 'hdSlots', 'purchasedSlots'), {
+        slots: initialState,
+        lastUpdated: serverTimestamp(),
+        metadata: {
+          totalNVRs: nvrs.length,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        }
+      });
+
+      setPurchasedSlots(initialState);
+      console.log('Estado padrão inicializado com sucesso');
+    } catch (error) {
+      console.error('Erro ao inicializar estado padrão:', error);
+      toast({
+        title: "Erro ao inicializar",
+        description: "Não foi possível inicializar o estado padrão dos slots.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Modificar os inputs de preço para salvar no Firebase
+  const handlePriceChange = async (type: '12TB' | '14TB', value: number) => {
+    if (type === '12TB') {
+      setHd12TBPrice(value);
+      await savePrices(value, hd14TBPrice);
+    } else {
+      setHd14TBPrice(value);
+      await savePrices(hd12TBPrice, value);
+    }
   };
 
   // Estatísticas por NVR: quantos HD adequados possui, quantos precisamos comprar e custo.
@@ -147,40 +234,49 @@ const HDEvolution = () => {
   // Calcular custo total estimado
   const totalCost = nvrHDStats.reduce((sum, stat) => sum + stat.totalCost, 0);
 
-  // Função para atualizar o status de compra de um slot específico
-  const toggleSlotPurchaseStatus = (nvrId: string, slotIndex: number) => {
-    setPurchasedSlots(prev => {
-      const updatedSlots = [...(prev[nvrId] || [])];
-      updatedSlots[slotIndex] = !updatedSlots[slotIndex];
+  // Modificar a função toggleSlotPurchaseStatus para garantir a estrutura correta
+  const toggleSlotPurchaseStatus = async (nvrId: string, slotIndex: number) => {
+    try {
+      // Criar uma cópia profunda do estado atual
+      const currentSlots = JSON.parse(JSON.stringify(purchasedSlots));
       
-      // Criar novo objeto com as alterações
-      const newState = {
-        ...prev,
-        [nvrId]: updatedSlots
-      };
-      
-      // Salvar no localStorage
-      localStorage.setItem('purchasedHDSlots', JSON.stringify(newState));
-      
-      // Exibir toast de confirmação
-      const nvr = nvrs.find(n => n.id === nvrId);
-      const nvrName = nvr ? (nvr.marina ? `${nvr.marina} (${nvr.name})` : nvr.name) : 'NVR';
-      const slotNumber = slotIndex + 1;
-      
-      if (updatedSlots[slotIndex]) {
-        toast({
-          title: "HD marcado como comprado",
-          description: `Slot ${slotNumber} do ${nvrName} foi marcado como comprado`,
-        });
-      } else {
-        toast({
-          title: "HD desmarcado",
-          description: `Slot ${slotNumber} do ${nvrName} não está mais marcado como comprado`,
-        });
+      // Garantir que o objeto para este NVR existe
+      if (!currentSlots[nvrId]) {
+        currentSlots[nvrId] = Array(16).fill(false);
       }
       
-      return newState;
-    });
+      // Inverter o estado do slot
+      currentSlots[nvrId][slotIndex] = !currentSlots[nvrId][slotIndex];
+
+      console.log('Salvando estado atualizado:', currentSlots);
+
+      // Salvar no Firebase com metadata atualizado
+      const docRef = doc(db, 'hdSlots', 'purchasedSlots');
+      await setDoc(docRef, {
+        slots: currentSlots,
+        lastUpdated: serverTimestamp(),
+        metadata: {
+          totalNVRs: nvrs.length,
+          updatedAt: serverTimestamp(),
+          lastModifiedNVR: nvrId,
+          lastModifiedSlot: slotIndex,
+          lastModifiedStatus: currentSlots[nvrId][slotIndex]
+        }
+      }, { merge: true }); // Usar merge para não sobrescrever outros campos
+
+      toast({
+        title: "Status atualizado",
+        description: `Slot ${slotIndex + 1} ${currentSlots[nvrId][slotIndex] ? 'marcado' : 'desmarcado'} como comprado.`,
+      });
+
+    } catch (error) {
+      console.error('Erro ao atualizar slot:', error);
+      toast({
+        title: "Erro ao atualizar",
+        description: "Não foi possível atualizar o status do slot.",
+        variant: "destructive"
+      });
+    }
   };
 
   // Função para gerar o relatório de evolução de HDs
@@ -398,9 +494,7 @@ const HDEvolution = () => {
                 type="number"
                 className="border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-md pl-8 pr-3 py-2 w-28"
                 value={hd12TBPrice}
-                onChange={(e) => {
-                  setHd12TBPrice(Number(e.target.value));
-                }}
+                onChange={(e) => handlePriceChange('12TB', Number(e.target.value))}
               />
             </div>
           </div>
@@ -415,28 +509,47 @@ const HDEvolution = () => {
                 type="number"
                 className="border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-md pl-8 pr-3 py-2 w-28"
                 value={hd14TBPrice}
-                onChange={(e) => {
-                  setHd14TBPrice(Number(e.target.value));
-                }}
+                onChange={(e) => handlePriceChange('14TB', Number(e.target.value))}
               />
             </div>
           </div>
           <Button 
             variant="outline" 
             className="bg-red-50 hover:bg-red-100 text-red-600 border-red-200 dark:bg-red-900/30 dark:border-red-800 dark:text-red-300"
-            onClick={() => {
+            onClick={async () => {
               // Confirmar antes de limpar todas as marcações
               if (window.confirm('Tem certeza que deseja limpar todas as marcações de HDs comprados?')) {
-                // Inicializar novamente com o estado padrão (apenas HDs adequados marcados)
-                initializeDefaultPurchasedState();
-                
-                // Limpar do localStorage
-                localStorage.removeItem('purchasedHDSlots');
-                
-                toast({
-                  title: "Marcações limpas",
-                  description: "Todas as marcações de HDs comprados foram removidas",
-                });
+                try {
+                  // Criar estado inicial vazio
+                  const initialState = {};
+                  nvrs.forEach(nvr => {
+                    initialState[nvr.id] = Array(16).fill(false);
+                  });
+
+                  // Salvar no Firebase
+                  await setDoc(doc(db, 'hdSlots', 'purchasedSlots'), {
+                    slots: initialState,
+                    lastUpdated: serverTimestamp(),
+                    metadata: {
+                      totalNVRs: nvrs.length,
+                      updatedAt: serverTimestamp(),
+                      resetBy: 'user',
+                      resetAt: serverTimestamp()
+                    }
+                  });
+
+                  toast({
+                    title: "Marcações limpas",
+                    description: "Todas as marcações de HDs comprados foram removidas",
+                  });
+                } catch (error) {
+                  console.error('Erro ao limpar marcações:', error);
+                  toast({
+                    title: "Erro ao limpar",
+                    description: "Não foi possível limpar as marcações.",
+                    variant: "destructive"
+                  });
+                }
               }
             }}
           >

@@ -105,6 +105,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           ${collapsed ? 'w-20' : 'w-72'} 
           bg-sidebar border-r border-sidebar-border
           flex flex-col shadow-md relative
+          md:translate-x-0 transform
+          ${collapsed ? '-translate-x-20' : '-translate-x-72'}
+          md:static fixed z-50 h-full
         `}
       >
         {/* Botão de recolher */}
@@ -117,6 +120,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             bg-sidebar-primary text-sidebar-primary-foreground
             shadow-md hover:bg-sidebar-primary/80
             transition-all duration-300
+            md:flex hidden
           `}
           title={collapsed ? "Expandir menu" : "Recolher menu"}
         >
@@ -245,7 +249,23 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </div>
       </aside>
       
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 overflow-y-auto w-full md:w-auto">
+        {/* Botão de menu móvel */}
+        <button
+          onClick={toggleCollapse}
+          className={`
+            md:hidden fixed top-4 left-4 z-40
+            flex items-center justify-center
+            w-10 h-10 rounded-md
+            bg-sidebar-primary text-sidebar-primary-foreground
+            shadow-md hover:bg-sidebar-primary/80
+          `}
+        >
+          {collapsed ? 
+            <ChevronRight className="w-6 h-6" /> : 
+            <ChevronLeft className="w-6 h-6" />
+          }
+        </button>
         {children}
       </main>
     </div>

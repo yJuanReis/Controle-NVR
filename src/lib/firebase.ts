@@ -31,4 +31,4 @@ export const database = getDatabase(app);
 // Inicializar e exportar o Firestore
 export const db = getFirestore(app);
 
-export default app;
+export default app; 
