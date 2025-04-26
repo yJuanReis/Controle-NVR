@@ -4,33 +4,44 @@
     <meta charset="utf-8">
     <title>Redirecionando...</title>
     <script>
-        // Função para decodificar parâmetros da URL
-        function getQueryVariable(variable) {
-            var query = window.location.search.substring(1);
-            var vars = query.split('&');
-            for (var i = 0; i < vars.length; i++) {
-                var pair = vars[i].split('=');
-                if (pair[0] === variable) {
-                    return decodeURIComponent(pair[1].replace(/\+/g, '%20'));
-                }
+        (function(l) {
+            if (l.search[1] === '/') {
+                var decoded = l.search.slice(1).split('&').map(function(s) { 
+                    return s.replace(/~and~/g, '&')
+                }).join('?');
+                window.history.replaceState(null, null,
+                    l.pathname.slice(0, -1) + decoded + l.hash
+                );
             }
-            return null;
-        }
 
-        // Redireciona para a URL correta
-        var segmentCount = 1; // Ajuste este valor baseado na sua estrutura de URL
-        var rootPath = window.location.pathname.split('/').slice(0, 1 + segmentCount).join('/');
-        var path = getQueryVariable('path');
-        
-        if (path) {
-            window.location.replace(rootPath + '/#/' + path);
-        } else {
-            // Se não houver path, redireciona para a home
-            window.location.replace(rootPath + '/#/');
-        }
+            // Configuração específica para o GitHub Pages
+            var repoName = 'Controle-NVR';
+            var pathSegments = l.pathname.split('/');
+            var basePathIndex = pathSegments.indexOf(repoName);
+            
+            if (basePathIndex > -1) {
+                // Remove segmentos após o nome do repositório
+                pathSegments = pathSegments.slice(0, basePathIndex + 1);
+            }
+            
+            var basePath = pathSegments.join('/');
+            
+            // Se estamos em uma rota que não é a raiz do repositório
+            if (l.pathname.indexOf(repoName) > -1 && l.pathname.length > (basePath.length + 1)) {
+                var route = l.pathname.substr(basePath.length + 1);
+                // Redireciona para a rota correta usando hash
+                window.location.replace(basePath + '/#/' + route);
+            } else {
+                // Redireciona para a home se não houver rota específica
+                window.location.replace(basePath + '/#/');
+            }
+        }(window.location))
     </script>
 </head>
 <body>
-    Redirecionando...
+    <div style="text-align: center; padding: 20px;">
+        <h1>Redirecionando...</h1>
+        <p>Se o redirecionamento não funcionar, <a href="/Controle-NVR/#/">clique aqui</a>.</p>
+    </div>
 </body>
 </html> 
