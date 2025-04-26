@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Redirecionando...</title>
+    <script>
+        // Função para decodificar parâmetros da URL
+        function getQueryVariable(variable) {
+            var query = window.location.search.substring(1);
+            var vars = query.split('&');
+            for (var i = 0; i < vars.length; i++) {
+                var pair = vars[i].split('=');
+                if (pair[0] === variable) {
+                    return decodeURIComponent(pair[1].replace(/\+/g, '%20'));
+                }
+            }
+            return null;
+        }
+
+        // Redireciona para a URL correta
+        var segmentCount = 1; // Ajuste este valor baseado na sua estrutura de URL
+        var rootPath = window.location.pathname.split('/').slice(0, 1 + segmentCount).join('/');
+        var path = getQueryVariable('path');
+        
+        if (path) {
+            window.location.replace(rootPath + '/#/' + path);
+        } else {
+            // Se não houver path, redireciona para a home
+            window.location.replace(rootPath + '/#/');
+        }
+    </script>
+</head>
+<body>
+    Redirecionando...
+</body>
+</html> 
