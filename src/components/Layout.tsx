@@ -183,7 +183,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             ) : (
               <div className="flex items-center">
                 <span className="text-4xl mr-3" role="img" aria-label="Navegação">🧭</span>
-                <h1 className="text-2xl font-bold text-sidebar-foreground">{appName}</h1>
+                <h1 className="text-2xl font-bold text-sidebar-foreground">{appName} - ATUALIZADO</h1>
               </div>
             )}
           </div>
