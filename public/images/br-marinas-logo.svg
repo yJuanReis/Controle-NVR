@@ -1,0 +1,16 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fundo circular azul -->
+  <circle cx="256" cy="256" r="240" fill="#0066CC" />
+  
+  <!-- Ondas representando o mar -->
+  <path d="M90 280C130 250 170 290 210 260C250 230 290 270 330 240C370 210 410 250 450 220" stroke="white" stroke-width="12" stroke-linecap="round" />
+  <path d="M90 320C130 290 170 330 210 300C250 270 290 310 330 280C370 250 410 290 450 260" stroke="white" stroke-width="12" stroke-linecap="round" />
+  
+  <!-- Barco estilizado -->
+  <path d="M256 120L200 220H312L256 120Z" fill="white" />
+  <rect x="242" y="220" width="28" height="60" fill="white" />
+  
+  <!-- Letras BR como paths -->
+  <path d="M216 340H246C256 340 264 338 270 334C276 330 279 324 279 316C279 310 277 305 273 301C269 297 264 295 258 295V293C263 292 267 290 270 287C273 284 274 279 274 273C274 266 272 260 267 256C262 252 255 250 246 250H216V340ZM236 287V268H243C247 268 250 269 252 271C254 273 255 275 255 279C255 282 254 285 252 287C250 289 247 290 243 290H236ZM236 305H244C248 305 251 306 254 308C256 310 257 313 257 317C257 321 256 324 254 326C251 328 248 329 244 329H236V305Z" fill="white"/>
+  <path d="M296 340H346V322H316V304H342V286H316V268H345V250H296V340Z" fill="white"/>
+</svg> 

@@ -18,6 +18,9 @@ import {
 import { useNVR } from '@/context/NVRContext';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { database } from '../firebase';
+import { ref, onValue } from 'firebase/database';
+import { Button } from '@/components/ui/button';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -29,6 +32,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [collapsed, setCollapsed] = useState<boolean>(false);
   const [darkMode, setDarkMode] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const [appName, setAppName] = useState<string>('BR Marinas');
   
   // Estatísticas rápidas
   const stats = getTotalStats();
@@ -83,6 +87,45 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     }
   }, []);
   
+  // Carregar configurações do app (apenas nome da aplicação)
+  useEffect(() => {
+    try {
+      // Carregar nome da aplicação do localStorage
+      const localAppName = window.localStorage.getItem('app_name');
+      const localTitle = window.localStorage.getItem('app_title');
+      
+      if (localAppName) setAppName(localAppName);
+      if (localTitle && localTitle.length > 0) document.title = localTitle;
+      
+      // Buscar configurações do Firebase (exceto logo)
+      const configRef = ref(database, 'config/app');
+      const unsubscribe = onValue(configRef, (snapshot) => {
+        if (snapshot.exists()) {
+          const data = snapshot.val();
+          
+          // Atualizar nome da aplicação
+          if (data.appName) {
+            setAppName(data.appName);
+            window.localStorage.setItem('app_name', data.appName);
+          }
+          
+          // Atualizar título da página se definido
+          if (data.title && data.title.length > 0) {
+            document.title = data.title;
+            window.localStorage.setItem('app_title', data.title);
+          }
+        }
+      }, (error) => {
+        console.error("Erro ao monitorar configurações:", error);
+      });
+      
+      // Cleanup 
+      return () => unsubscribe();
+    } catch (error) {
+      console.error("Erro ao inicializar configurações:", error);
+    }
+  }, []);
+  
   // Salvar preferências
   const toggleCollapse = () => {
     const newState = !collapsed;
@@ -131,13 +174,17 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </button>
         
         {/* Cabeçalho da sidebar */}
-        <div className="p-4 border-b border-sidebar-border flex items-center">
+        <div className="p-4 border-b border-sidebar-border">
           <div className="flex items-center">
-            <div className="flex justify-center items-center bg-sidebar-primary text-sidebar-primary-foreground p-2 rounded-md mr-3">
-              <Server className="w-6 h-6" />
-            </div>
-            {!collapsed && (
-              <h1 className="text-xl font-bold text-sidebar-foreground">Controle NVR</h1>
+            {collapsed ? (
+              <div className="flex justify-center items-center bg-sidebar-primary text-sidebar-primary-foreground p-2 rounded-md">
+                <span className="text-3xl" role="img" aria-label="Navegação">🧭</span>
+              </div>
+            ) : (
+              <div className="flex items-center">
+                <span className="text-4xl mr-3" role="img" aria-label="Navegação">🧭</span>
+                <h1 className="text-2xl font-bold text-sidebar-foreground">{appName}</h1>
+              </div>
             )}
           </div>
         </div>
@@ -224,6 +271,23 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 )}
               </Link>
             </li>
+            <li>
+              <Link
+                to="/configuracoes"
+                className={`
+                  flex items-center ${collapsed ? 'justify-center' : 'justify-between'} 
+                  px-4 py-3 rounded-md
+                  ${isActive('/configuracoes') 
+                    ? 'border-l-4 border-primary text-primary font-medium' 
+                    : 'text-sidebar-foreground hover:bg-sidebar-accent/10 hover:text-sidebar-primary'}
+                `}
+              >
+                <div className="flex items-center">
+                  <Settings className={`${collapsed ? 'w-6 h-6' : 'w-5 h-5 mr-3'} ${collapsed && isActive('/configuracoes') ? 'text-primary' : ''}`} />
+                  {!collapsed && <span>Configurações</span>}
+                </div>
+              </Link>
+            </li>
           </ul>
         </nav>
         
@@ -266,6 +330,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             <ChevronLeft className="w-6 h-6" />
           }
         </button>
+        
         {children}
       </main>
     </div>

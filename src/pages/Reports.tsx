@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useNVR } from '@/context/NVRContext';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -44,6 +44,13 @@ const Reports = () => {
   // Estado para o diálogo do NVR
   const [nvrDialogOpen, setNvrDialogOpen] = useState(false);
   const [selectedNvrData, setSelectedNvrData] = useState<any>(null);
+
+  // Inicialização dos dados de câmeras contratadas do Firebase
+  useEffect(() => {
+    FirebaseService.initContractedCameras((data) => {
+      setContractedCameras(data);
+    });
+  }, []);
 
   const stats = getTotalStats();
   const slotStats = getSlotStats();
