@@ -27,10 +27,11 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          VITE_BASE_URL: /Controle-NVR
+          VITE_BASE_URL: /Controle-NVR/
 
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           folder: dist
-          branch: gh-pages 
+          branch: gh-pages
+          force: true 
