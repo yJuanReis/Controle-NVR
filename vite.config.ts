@@ -5,7 +5,7 @@ import path from "path";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
-  base: '/Controle-NVR-v2/', // Nome do repositório no GitHub
+  base: '/Controle-NVR/', // Nome do repositório no GitHub
   build: {
     outDir: 'dist',
     assetsDir: 'assets',

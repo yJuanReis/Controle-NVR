@@ -2,7 +2,7 @@
   "name": "controle-nvr",
   "private": true,
   "version": "0.1.0",
-  "homepage": "https://yjuanreis.github.io/Controle-NVR-v2/",
+  "homepage": "https://yjuanreis.github.io/Controle-NVR/",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
