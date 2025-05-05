@@ -39,11 +39,12 @@ jobs:
         env:
           VITE_BASE_URL: /Controle-NVR/
 
-      - name: Create .nojekyll file
+      - name: Create .nojekyll file (if needed)
         run: |
-          touch dist/.nojekyll
-          touch dist/404.html
-          cp dist/index.html dist/404.html
+          if [ ! -f dist/.nojekyll ]; then
+            touch dist/.nojekyll
+          fi
+          # O script postbuild já cria o 404.html, não precisamos criar de novo
 
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@v4
