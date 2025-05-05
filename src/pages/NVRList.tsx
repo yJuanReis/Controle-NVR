@@ -221,7 +221,7 @@ const NVRList = () => {
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">BR Marinas - Gestão de Segurança</h1>
+        <h1 className="text-2xl font-bold">BR Marinas - Gestão de Gravadores</h1>
         <Button onClick={() => setIsAddingNVR(true)} className="flex items-center">
           <PlusCircle className="mr-2 h-4 w-4" /> Adicionar NVR
         </Button>
@@ -276,28 +276,28 @@ const NVRList = () => {
         </div>
       </div>
 
-      {/* Cartões de links para relatórios */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <Card className="bg-gradient-to-br from-white to-blue-50 border-2 border-blue-200 hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/relatorios')}>
-          <CardContent className="p-4 flex items-center">
-            <div className="bg-blue-500 text-white p-3 rounded-full mr-4 shadow-sm">
-              <BarChart2 className="h-5 w-5" />
+      {/* Cartões de links para relatórios - Modificado para preencher toda a área */}
+      <div className="grid grid-cols-2 gap-3 mb-6">
+        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-300 hover:shadow-md transition-all cursor-pointer hover:bg-blue-100 hover:border-blue-400 hover:-translate-y-1" onClick={() => navigate('/relatorios')}>
+          <CardContent className="p-5 flex items-center h-full">
+            <div className="bg-blue-600 text-white p-3 rounded-full mr-5 shadow-lg">
+              <BarChart2 className="h-6 w-6" />
             </div>
             <div>
-              <h3 className="font-semibold text-blue-800">Relatórios</h3>
-              <p className="text-sm text-blue-600">Visão geral do sistema</p>
+              <h3 className="font-bold text-blue-900 text-lg">Relatórios</h3>
+              <p className="text-md text-blue-700">Visão geral do sistema</p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-white to-amber-50 border-2 border-amber-200 hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/evolucao-hds')}>
-          <CardContent className="p-4 flex items-center">
-            <div className="bg-amber-500 text-white p-3 rounded-full mr-4 shadow-sm">
-              <HardDrive className="h-5 w-5" />
+        <Card className="bg-gradient-to-br from-amber-50 to-amber-100 border-2 border-amber-300 hover:shadow-md transition-all cursor-pointer hover:bg-amber-100 hover:border-amber-400 hover:-translate-y-1" onClick={() => navigate('/evolucao-hds')}>
+          <CardContent className="p-5 flex items-center h-full">
+            <div className="bg-amber-600 text-white p-3 rounded-full mr-5 shadow-lg">
+              <HardDrive className="h-6 w-6" />
             </div>
             <div>
-              <h3 className="font-semibold text-amber-800">Evolução de HDs</h3>
-              <p className="text-sm text-amber-600">Planejamento de armazenamento</p>
+              <h3 className="font-bold text-amber-900 text-lg">Evolução de HDs</h3>
+              <p className="text-md text-amber-700">Planejamento de armazenamento</p>
             </div>
           </CardContent>
         </Card>

@@ -1,26 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
-  Database, 
   BarChart2, 
   HardDrive, 
-  TrendingUp, 
-  ChevronLeft, 
-  ChevronRight, 
-  AlertCircle, 
   Sun,
   Moon,
-  Search,
   Home,
-  Server,
-  Settings
 } from 'lucide-react';
 import { useNVR } from '@/context/NVRContext';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { database } from '../firebase';
 import { ref, onValue } from 'firebase/database';
-import { Button } from '@/components/ui/button';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -29,9 +19,7 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
   const { nvrs, getTotalStats, getSlotStats } = useNVR();
-  const [collapsed, setCollapsed] = useState<boolean>(false);
   const [darkMode, setDarkMode] = useState<boolean>(false);
-  const [searchTerm, setSearchTerm] = useState<string>('');
   const [appName, setAppName] = useState<string>('BR Marinas');
   
   // Estatísticas rápidas
@@ -71,12 +59,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   
   // Carregar preferência do usuário
   useEffect(() => {
-    const savedCollapsed = localStorage.getItem('sidebarCollapsed');
     const savedTheme = localStorage.getItem('theme');
-    
-    if (savedCollapsed) {
-      setCollapsed(savedCollapsed === 'true');
-    }
     
     if (savedTheme) {
       setDarkMode(savedTheme === 'dark');
@@ -126,13 +109,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     }
   }, []);
   
-  // Salvar preferências
-  const toggleCollapse = () => {
-    const newState = !collapsed;
-    setCollapsed(newState);
-    localStorage.setItem('sidebarCollapsed', newState.toString());
-  };
-  
   const toggleTheme = () => {
     const newState = !darkMode;
     setDarkMode(newState);
@@ -140,112 +116,74 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   };
 
   return (
-    <div className={`flex h-screen ${darkMode ? 'dark' : ''}`}>
-      {/* Barra lateral moderna */}
+    <div className={`flex h-screen w-full ${darkMode ? 'dark' : ''}`}>
+      {/* Barra lateral moderna e elegante */}
       <aside 
         className={`
-          transition-all duration-300 ease-in-out
-          ${collapsed ? 'w-20' : 'w-72'} 
-          bg-sidebar border-r border-sidebar-border
-          flex flex-col shadow-md relative
-          md:translate-x-0 transform
-          ${collapsed ? '-translate-x-20' : '-translate-x-72'}
+          transition-all duration-300 ease-in-out 
+          w-72
+          bg-gradient-to-b from-sidebar-primary/20 to-sidebar
+          border-r border-sidebar-border/50
+          flex flex-col shadow-xl relative
           md:static fixed z-50 h-full
         `}
       >
-        {/* Botão de recolher */}
-        <button 
-          onClick={toggleCollapse}
-          className={`
-            absolute top-1/2 -right-3 z-10
-            flex items-center justify-center
-            w-6 h-16 rounded-r-md
-            bg-sidebar-primary text-sidebar-primary-foreground
-            shadow-md hover:bg-sidebar-primary/80
-            transition-all duration-300
-            md:flex hidden
-          `}
-          title={collapsed ? "Expandir menu" : "Recolher menu"}
-        >
-          {collapsed ? 
-            <ChevronRight className="w-4 h-4" /> : 
-            <ChevronLeft className="w-4 h-4" />
-          }
-        </button>
-        
         {/* Cabeçalho da sidebar */}
-        <div className="p-4 border-b border-sidebar-border">
-          <div className="flex items-center">
-            {collapsed ? (
-              <div className="flex justify-center items-center bg-sidebar-primary text-sidebar-primary-foreground p-2 rounded-md">
+        <div className="py-8 border-b border-sidebar-border/50 bg-sidebar-primary/10 relative">
+          <div className="flex items-center justify-center">
+            <div className="flex flex-col items-center text-center">
+              <div className="bg-sidebar-primary/70 text-sidebar-primary-foreground p-3 rounded-full w-16 h-16 flex items-center justify-center mb-3 shadow-md">
                 <span className="text-3xl" role="img" aria-label="Navegação">🧭</span>
               </div>
-            ) : (
-              <div className="flex items-center">
-                <span className="text-4xl mr-3" role="img" aria-label="Navegação">🧭</span>
-                <h1 className="text-2xl font-bold text-sidebar-foreground">{appName} - ATUALIZADO</h1>
-              </div>
-            )}
+              <h1 className="text-2xl font-bold text-sidebar-foreground drop-shadow-sm">{appName}</h1>
+            </div>
           </div>
         </div>
         
-        {/* Pesquisa */}
-        {!collapsed && (
-          <div className="p-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-2.5 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9 py-2 bg-sidebar-accent border-sidebar-border focus:ring-sidebar-primary focus:border-sidebar-primary text-sidebar-foreground"
-              />
-            </div>
-          </div>
-        )}
-        
         {/* Menu de navegação */}
-        <nav className="flex-1 overflow-y-auto py-4 px-3">
-          <span className={`px-3 text-xs font-semibold text-muted-foreground uppercase mb-2 ${collapsed ? 'hidden' : 'block'}`}>
+        <nav className="flex-1 overflow-y-auto py-6 px-4 mt-4">
+          <span className="px-3 text-xs font-bold text-sidebar-foreground/60 uppercase mb-4 block tracking-wider">
             Principal
           </span>
-          <ul className="space-y-2">
+          <ul className="space-y-4">
             <li>
               <Link
                 to="/"
                 className={`
-                  flex items-center ${collapsed ? 'justify-center' : 'justify-between'} 
-                  px-4 py-3 rounded-md
+                  flex items-center justify-between
+                  px-5 py-3.5 rounded-xl
                   ${isActive('/') 
-                    ? 'border-l-4 border-primary text-primary font-medium' 
-                    : 'text-sidebar-foreground hover:bg-sidebar-accent/10 hover:text-sidebar-primary'}
+                    ? 'bg-primary/15 text-primary font-medium shadow-sm' 
+                    : 'text-sidebar-foreground hover:bg-sidebar-accent/15 hover:text-sidebar-primary'}
+                  transition-all duration-200 ease-out
+                  hover:translate-x-1
                 `}
               >
                 <div className="flex items-center">
-                  <Home className={`${collapsed ? 'w-6 h-6' : 'w-5 h-5 mr-3'} ${collapsed && isActive('/') ? 'text-primary' : ''}`} />
-                  {!collapsed && <span>NVRs</span>}
+                  <Home className={`w-5 h-5 mr-3 ${isActive('/') ? 'text-primary' : ''}`} />
+                  <span>NVRs</span>
                 </div>
-                {!collapsed && (
-                  <Badge variant="outline" className="bg-sidebar-accent text-sidebar-foreground dark:bg-transparent dark:text-white">
-                    {nvrs.length}
-                  </Badge>
-                )}
+                <Badge variant="outline" className="bg-primary/10 text-primary dark:bg-primary/15 shadow-sm">
+                  {nvrs.length}
+                </Badge>
               </Link>
             </li>
             <li>
               <Link
                 to="/relatorios"
                 className={`
-                  flex items-center ${collapsed ? 'justify-center' : 'justify-between'} 
-                  px-4 py-3 rounded-md
+                  flex items-center justify-between 
+                  px-5 py-3.5 rounded-xl
                   ${isActive('/relatorios') 
-                    ? 'border-l-4 border-primary text-primary font-medium' 
-                    : 'text-sidebar-foreground hover:bg-sidebar-accent/10 hover:text-sidebar-primary'}
+                    ? 'bg-primary/15 text-primary font-medium shadow-sm' 
+                    : 'text-sidebar-foreground hover:bg-sidebar-accent/15 hover:text-sidebar-primary'}
+                  transition-all duration-200 ease-out
+                  hover:translate-x-1
                 `}
               >
                 <div className="flex items-center">
-                  <BarChart2 className={`${collapsed ? 'w-6 h-6' : 'w-5 h-5 mr-3'} ${collapsed && isActive('/relatorios') ? 'text-primary' : ''}`} />
-                  {!collapsed && <span>Relatórios</span>}
+                  <BarChart2 className={`w-5 h-5 mr-3 ${isActive('/relatorios') ? 'text-primary' : ''}`} />
+                  <span>Relatórios</span>
                 </div>
               </Link>
             </li>
@@ -253,84 +191,52 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               <Link
                 to="/evolucao-hds"
                 className={`
-                  flex items-center ${collapsed ? 'justify-center' : 'justify-between'} 
-                  px-4 py-3 rounded-md
+                  flex items-center justify-between 
+                  px-5 py-3.5 rounded-xl
                   ${isActive('/evolucao-hds') 
-                    ? 'border-l-4 border-primary text-primary font-medium' 
-                    : 'text-sidebar-foreground hover:bg-sidebar-accent/10 hover:text-sidebar-primary'}
+                    ? 'bg-primary/15 text-primary font-medium shadow-sm' 
+                    : 'text-sidebar-foreground hover:bg-sidebar-accent/15 hover:text-sidebar-primary'}
+                  transition-all duration-200 ease-out
+                  hover:translate-x-1
                 `}
               >
                 <div className="flex items-center">
-                  <HardDrive className={`${collapsed ? 'w-6 h-6' : 'w-5 h-5 mr-3'} ${collapsed && isActive('/evolucao-hds') ? 'text-primary' : ''}`} />
-                  {!collapsed && <span>Evolução HDs</span>}
+                  <HardDrive className={`w-5 h-5 mr-3 ${isActive('/evolucao-hds') ? 'text-primary' : ''}`} />
+                  <span>Evolução HDs</span>
                 </div>
-                {!collapsed && criticalNVRs.length > 0 && (
-                  <Badge className="bg-destructive/20 text-destructive font-bold dark:bg-transparent dark:border dark:border-destructive dark:text-white">
+                {criticalNVRs.length > 0 && (
+                  <Badge className="bg-destructive/15 text-destructive font-medium dark:bg-destructive/20 shadow-sm">
                     {criticalNVRs.length}
                   </Badge>
                 )}
-              </Link>
-            </li>
-            <li>
-              <Link
-                to="/configuracoes"
-                className={`
-                  flex items-center ${collapsed ? 'justify-center' : 'justify-between'} 
-                  px-4 py-3 rounded-md
-                  ${isActive('/configuracoes') 
-                    ? 'border-l-4 border-primary text-primary font-medium' 
-                    : 'text-sidebar-foreground hover:bg-sidebar-accent/10 hover:text-sidebar-primary'}
-                `}
-              >
-                <div className="flex items-center">
-                  <Settings className={`${collapsed ? 'w-6 h-6' : 'w-5 h-5 mr-3'} ${collapsed && isActive('/configuracoes') ? 'text-primary' : ''}`} />
-                  {!collapsed && <span>Configurações</span>}
-                </div>
               </Link>
             </li>
           </ul>
         </nav>
         
         {/* Botão de alternância de tema */}
-        <div className="p-4 border-t border-sidebar-border">
+        <div className="p-5 border-t border-sidebar-border/50 bg-sidebar-primary/5">
           <button 
             onClick={toggleTheme}
-            className="flex items-center justify-center w-full p-2 rounded-md hover:bg-sidebar-accent text-sidebar-foreground"
+            className="flex items-center justify-center w-full p-3.5 rounded-xl hover:bg-sidebar-accent/15 text-sidebar-foreground transition-all duration-200 ease-out hover:shadow-sm"
             title={darkMode ? "Mudar para tema claro" : "Mudar para tema escuro"}
           >
             {darkMode ? (
               <div className="flex items-center">
-                <Sun className="w-5 h-5 mr-2" />
-                {!collapsed && <span>Tema Claro</span>}
+                <Sun className="w-5 h-5 mr-3 text-amber-400" />
+                <span>Tema Claro</span>
               </div>
             ) : (
               <div className="flex items-center">
-                <Moon className="w-5 h-5 mr-2" />
-                {!collapsed && <span>Tema Escuro</span>}
+                <Moon className="w-5 h-5 mr-3 text-indigo-400" />
+                <span>Tema Escuro</span>
               </div>
             )}
           </button>
         </div>
       </aside>
       
-      <main className="flex-1 overflow-y-auto w-full md:w-auto">
-        {/* Botão de menu móvel */}
-        <button
-          onClick={toggleCollapse}
-          className={`
-            md:hidden fixed top-4 left-4 z-40
-            flex items-center justify-center
-            w-10 h-10 rounded-md
-            bg-sidebar-primary text-sidebar-primary-foreground
-            shadow-md hover:bg-sidebar-primary/80
-          `}
-        >
-          {collapsed ? 
-            <ChevronRight className="w-6 h-6" /> : 
-            <ChevronLeft className="w-6 h-6" />
-          }
-        </button>
-        
+      <main className="flex-1 overflow-y-auto w-full">
         {children}
       </main>
     </div>

@@ -1,0 +1,46 @@
+{
+  "rules": {
+    "users": {
+      "$uid": {
+        // Permitir leitura se o usuário estiver autenticado e for o dono do perfil
+        ".read": "auth != null && (auth.uid == $uid || root.child('users').child(auth.uid).child('isAdmin').val() == true)",
+        
+        // Permitir escrita se o usuário estiver autenticado e for o dono do perfil ou for admin
+        ".write": "auth != null && (auth.uid == $uid || root.child('users').child(auth.uid).child('isAdmin').val() == true)"
+      },
+      // Acesso geral para usuários admin para ler a lista completa
+      ".read": "auth != null && root.child('users').child(auth.uid).child('isAdmin').val() == true"
+    },
+    
+    // Configurações do sistema
+    "config": {
+      // Qualquer usuário logado pode ler, apenas admin pode escrever
+      ".read": "auth != null",
+      ".write": "auth != null && root.child('users').child(auth.uid).child('isAdmin').val() == true"
+    },
+    
+    // Dados dos NVRs
+    "nvrs": {
+      ".read": "auth != null",
+      ".write": "auth != null && root.child('users').child(auth.uid).child('isAdmin').val() == true"
+    },
+    
+    // Câmeras contratadas
+    "contractedCamerasPerMarina": {
+      ".read": "auth != null",
+      ".write": "auth != null && root.child('users').child(auth.uid).child('isAdmin').val() == true"
+    },
+    
+    // Nó de teste do sistema
+    "system": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    
+    // Por padrão, negar todo acesso não especificado
+    "$other": {
+      ".read": false,
+      ".write": false
+    }
+  }
+} 

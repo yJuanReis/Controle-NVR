@@ -1,7 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getDatabase } from "firebase/database";
 import { getAnalytics } from "firebase/analytics";
-import { getFirestore } from 'firebase/firestore';
 
 // Configuração do Firebase para o projeto Controle-NVR
 const firebaseConfig = {
@@ -27,8 +26,5 @@ if (typeof window !== 'undefined') {
 
 // Inicializar e exportar o Realtime Database
 export const database = getDatabase(app);
-
-// Inicializar e exportar o Firestore
-export const db = getFirestore(app);
 
 export default app; 

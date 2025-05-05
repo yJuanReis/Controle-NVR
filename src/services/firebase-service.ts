@@ -2,9 +2,6 @@ import { database } from '../firebase';
 import { ref, set, onValue, push, remove, update } from 'firebase/database';
 import { NVR } from '@/types';
 
-// Chave para armazenar no localStorage para compatibilidade
-const STORAGE_KEY = 'nvr-insight-data';
-
 // Referência para o nó 'nvrs' no Firebase
 const nvrsRef = ref(database, 'nvrs');
 
@@ -19,22 +16,10 @@ export const FirebaseService = {
         const data = snapshot.val();
         const nvrsArray = Object.values(data) as NVR[];
         
-        // Atualizar o localStorage para compatibilidade
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(nvrsArray));
-        
         // Chamar o callback com os dados atualizados
         callback(nvrsArray);
       } else {
-        // Se não houver dados no Firebase, usar o localStorage existente
-        const savedData = localStorage.getItem(STORAGE_KEY);
-        if (savedData) {
-          const localNVRs = JSON.parse(savedData) as NVR[];
-          // Salvar os dados locais no Firebase
-          set(nvrsRef, localNVRs);
-          callback(localNVRs);
-        } else {
-          callback([]);
-        }
+        callback([]);
       }
     });
   },
@@ -50,22 +35,10 @@ export const FirebaseService = {
       if (snapshot.exists()) {
         const data = snapshot.val();
         
-        // Atualizar o localStorage para compatibilidade
-        localStorage.setItem('contractedCamerasPerMarina', JSON.stringify(data));
-        
         // Chamar o callback com os dados atualizados
         callback(data);
       } else {
-        // Se não houver dados no Firebase, usar o localStorage existente
-        const savedData = localStorage.getItem('contractedCamerasPerMarina');
-        if (savedData) {
-          const localData = JSON.parse(savedData);
-          // Salvar os dados locais no Firebase
-          set(contractedCamerasRef, localData);
-          callback(localData);
-        } else {
-          callback({});
-        }
+        callback({});
       }
     });
   },

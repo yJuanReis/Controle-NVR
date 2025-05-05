@@ -3,7 +3,6 @@ import {
   LayoutDashboard, 
   HardDrive, 
   FileText, 
-  Settings, 
   Code,
   BarChart 
 } from 'lucide-react';
@@ -35,12 +34,7 @@ export default function MainNavigation() {
       name: 'Analisador de Relatórios',
       path: '/analisador-relatorios',
       icon: <BarChart className="w-5 h-5" />
-    },
-    {
-      name: 'Configurações',
-      path: '/settings',
-      icon: <Settings className="w-5 h-5" />
-    },
+    }
   ];
 
   return (
