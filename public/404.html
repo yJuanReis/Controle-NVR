@@ -2,46 +2,21 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Redirecionando...</title>
-    <script>
-        (function(l) {
-            if (l.search[1] === '/') {
-                var decoded = l.search.slice(1).split('&').map(function(s) { 
-                    return s.replace(/~and~/g, '&')
-                }).join('?');
-                window.history.replaceState(null, null,
-                    l.pathname.slice(0, -1) + decoded + l.hash
-                );
-            }
-
-            // Configuração específica para o GitHub Pages
-            var repoName = 'Controle-NVR';
-            var pathSegments = l.pathname.split('/');
-            var basePathIndex = pathSegments.indexOf(repoName);
-            
-            if (basePathIndex > -1) {
-                // Remove segmentos após o nome do repositório
-                pathSegments = pathSegments.slice(0, basePathIndex + 1);
-            }
-            
-            var basePath = pathSegments.join('/');
-            
-            // Se estamos em uma rota que não é a raiz do repositório
-            if (l.pathname.indexOf(repoName) > -1 && l.pathname.length > (basePath.length + 1)) {
-                var route = l.pathname.substr(basePath.length + 1);
-                // Redireciona para a rota correta usando hash
-                window.location.replace(basePath + '/#/' + route);
-            } else {
-                // Redireciona para a home se não houver rota específica
-                window.location.replace(basePath + '/#/');
-            }
-        }(window.location))
+    <title>BR Marinas - Controle NVR</title>
+    <script type="text/javascript">
+        // Arquivo para resolver problemas de roteamento no GitHub Pages
+        // Redireciona todas as requisições 404 de volta para index.html
+        var segmentCount = 1;
+        var l = window.location;
+        l.replace(
+            l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+            l.pathname.split('/').slice(0, 1 + segmentCount).join('/') + '/?p=/' +
+            l.pathname.slice(1).split('/').slice(segmentCount).join('/').replace(/&/g, '~and~') +
+            (l.search ? '&q=' + l.search.slice(1).replace(/&/g, '~and~') : '') +
+            l.hash
+        );
     </script>
 </head>
 <body>
-    <div style="text-align: center; padding: 20px;">
-        <h1>Redirecionando...</h1>
-        <p>Se o redirecionamento não funcionar, <a href="/Controle-NVR/#/">clique aqui</a>.</p>
-    </div>
 </body>
 </html> 
