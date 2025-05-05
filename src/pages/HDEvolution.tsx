@@ -2,11 +2,12 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useNVR } from '@/context/NVRContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Download, FileText, FileJson, FileSpreadsheet } from 'lucide-react';
+import { Download, FileText, FileJson, FileSpreadsheet, FileUp } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
 import { database } from '../firebase';
 import { ref, onValue, set } from 'firebase/database';
+import * as XLSX from 'xlsx';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -389,7 +390,11 @@ const HDEvolution = () => {
     const isExceptionModel = modelos12TB.includes(nvr.model);
     const maxHDSize = isExceptionModel ? 12 : 14;
     
+    // Contador de slots selecionáveis (que podem ter upgrade)
     return count + nvr.slots.filter(slot => {
+      // Um slot só é considerado selecionável se:
+      // 1. Está vazio OU tem um HD abaixo do tamanho máximo suportado
+      // 2. Não é um slot que não pode ser alterado por alguma restrição
       return slot.status === "empty" || (!slot.hdSize || (slot.hdSize && slot.hdSize < maxHDSize));
     }).length;
   }, 0);
@@ -402,7 +407,14 @@ const HDEvolution = () => {
     return count + nvr.slots.reduce((slotCount, slot, index) => {
       const hasAdequateHD = slot.status !== "empty" && slot.hdSize && slot.hdSize >= maxHDSize;
       const isPurchased = purchasedSlots[nvr.id]?.[index] || false;
-      return slotCount + (hasAdequateHD || isPurchased ? 1 : 0);
+      
+      // Só conta se o slot for um que pode ser selecionado
+      // (não considerar slots que não podem receber upgrade)
+      if (slot.status === "empty" || (!slot.hdSize || (slot.hdSize && slot.hdSize < maxHDSize))) {
+        return slotCount + (hasAdequateHD || isPurchased ? 1 : 0);
+      }
+      
+      return slotCount;
     }, 0);
   }, 0);
 
@@ -581,6 +593,109 @@ const HDEvolution = () => {
     return csv;
   };
 
+  // Função para gerar o relatório em formato Excel
+  const generateHDEvolutionExcel = () => {
+    // Dados de resumo geral
+    const resumoGeral = [
+      ['Relatório de Evolução de HDs', ''],
+      ['Data', new Date().toLocaleDateString('pt-BR')],
+      ['Progresso Geral', `${totalProgress}%`],
+      ['Slots para Upgrade', upgradeNeeded + totalEmptySlots - (resolvedSlots - currentHDsCount())],
+      ['Slots Vazios', totalEmptySlots],
+      ['Custo Estimado', `R$ ${totalCost.toLocaleString('pt-BR')}`],
+      ['', ''] // Linha vazia para separação
+    ];
+
+    // Cabeçalho da tabela de NVRs
+    const cabecalhoNVRs = [
+      'Marina', 'Numeração', 'Modelo', 'Tamanho Máximo', 'Slots para Upgrade', 'Custo Estimado', 'Slots Comprados', 'Slots Adequados'
+    ];
+
+    // Dados dos NVRs
+    const dadosNVRs = nvrHDStats.map(({ nvr, currentHDs, slotsToUpgrade, totalCost, maxHDSize }) => {
+      // Calcular quantos slots foram marcados como comprados
+      const slotsPurchased = nvr.slots.reduce((count, slot, index) => {
+        const isPurchased = purchasedSlots[nvr.id]?.[index] || false;
+        const hasAdequateHD = slot.status !== "empty" && slot.hdSize && slot.hdSize >= maxHDSize;
+        return count + (!hasAdequateHD && isPurchased ? 1 : 0);
+      }, 0);
+      
+      return [
+        nvr.marina || '',
+        nvr.name,
+        nvr.model,
+        `${maxHDSize}TB`,
+        slotsToUpgrade,
+        `R$ ${totalCost.toLocaleString('pt-BR')}`,
+        slotsPurchased,
+        currentHDs
+      ];
+    });
+
+    // Informações sobre os slots de cada NVR
+    const cabecalhoSlots = ['Marina', 'Numeração', 'Slot', 'Status', 'Tamanho (TB)'];
+    
+    const dadosSlots = [];
+    nvrHDStats.forEach(({ nvr, maxHDSize }) => {
+      nvr.slots.forEach((slot, idx) => {
+        const isPurchased = purchasedSlots[nvr.id]?.[idx] || false;
+        const hasAdequateHD = slot.status !== "empty" && slot.hdSize && slot.hdSize >= maxHDSize;
+        
+        let status;
+        if (hasAdequateHD) {
+          status = 'OK';
+        } else if (isPurchased) {
+          status = 'Comprado';
+        } else if (slot.status !== "empty") {
+          status = 'Precisa Upgrade';
+        } else {
+          status = 'Vazio';
+        }
+        
+        dadosSlots.push([
+          nvr.marina || '',
+          nvr.name,
+          `Slot ${idx + 1}`,
+          status,
+          slot.hdSize || 0
+        ]);
+      });
+    });
+
+    // Informações de preços
+    const precosInfo = [
+      ['Informações de Preços', ''],
+      ['HD 12TB', `R$ ${hd12TBPrice.toLocaleString('pt-BR')}`],
+      ['HD 14TB', `R$ ${hd14TBPrice.toLocaleString('pt-BR')}`],
+      ['', ''],
+      ['Modelos com Limite de 12TB:', ''],
+      ...modelos12TB.map(modelo => [modelo, ''])
+    ];
+
+    // Criar planilha
+    const wb = XLSX.utils.book_new();
+    
+    // Adicionar guia de resumo
+    const wsResumo = XLSX.utils.aoa_to_sheet(resumoGeral);
+    XLSX.utils.book_append_sheet(wb, wsResumo, 'Resumo Geral');
+    
+    // Adicionar guia de NVRs
+    const nvrsData = [cabecalhoNVRs, ...dadosNVRs];
+    const wsNVRs = XLSX.utils.aoa_to_sheet(nvrsData);
+    XLSX.utils.book_append_sheet(wb, wsNVRs, 'NVRs');
+    
+    // Adicionar guia de slots
+    const slotsData = [cabecalhoSlots, ...dadosSlots];
+    const wsSlots = XLSX.utils.aoa_to_sheet(slotsData);
+    XLSX.utils.book_append_sheet(wb, wsSlots, 'Slots Detalhados');
+    
+    // Adicionar guia de informações
+    const wsInfo = XLSX.utils.aoa_to_sheet(precosInfo);
+    XLSX.utils.book_append_sheet(wb, wsInfo, 'Informações');
+    
+    return wb;
+  };
+
   // Função para baixar o relatório como arquivo
   const downloadHDEvolutionReport = (format = 'txt') => {
     let data, mimeType, fileName;
@@ -591,6 +706,14 @@ const HDEvolution = () => {
     }).replace(/\//g, '-');
     
     switch (format) {
+      case 'xlsx':
+        const wb = generateHDEvolutionExcel();
+        XLSX.writeFile(wb, `evolucao-hds-${date}.xlsx`);
+        toast({
+          title: "Relatório de evolução de HDs gerado",
+          description: `O relatório foi baixado em formato XLSX.`,
+        });
+        return; // Retorna imediatamente pois o XLSX.writeFile já cuida do download
       case 'json':
         data = JSON.stringify(generateHDEvolutionJson(), null, 2);
         mimeType = 'application/json;charset=utf-8';
@@ -761,6 +884,10 @@ const HDEvolution = () => {
               <DropdownMenuItem onClick={() => downloadHDEvolutionReport('json')} className="flex items-center gap-2">
                 <FileJson className="h-4 w-4" />
                 <span>JSON (.json)</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => downloadHDEvolutionReport('xlsx')} className="flex items-center gap-2">
+                <FileUp className="h-4 w-4" />
+                <span>Excel (.xlsx)</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
